@@ -54,6 +54,8 @@ jobs:
           mkdir -p /opt/images
           cd /opt/padavan/toolchain-mipsel
           sh dl_toolchain.sh
+          cd /opt/padavan/trunk
+          sudo ./clear_tree
 
       - name: Run DIY
         run: |
@@ -71,7 +73,6 @@ jobs:
         id: compile
         run: |
           cd /opt/padavan/trunk
-          sudo ./clear_tree
           sudo ./build_firmware_modify K2P 0
           echo "::set-output name=status::success"
           echo "FILE_DATE=_$(date +"%Y%m%d%H%M"-K2P)" >> $GITHUB_ENV
