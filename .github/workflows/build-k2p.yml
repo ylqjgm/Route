@@ -18,7 +18,7 @@ on:
 env:
   REPO_URL: https://github.com/hanwckf/padavan-4.4.git
   CONFIG_FILE: k2p/.config
-  DIY_FILE: k2p/diy.sh
+  DIY_SH: k2p/diy.sh
   TZ: Asia/Shanghai
   SRC_DIR: /opt/padavan
   WORK_DIR: /opt/padavan/trunk
