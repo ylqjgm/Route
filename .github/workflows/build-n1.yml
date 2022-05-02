@@ -106,7 +106,7 @@ jobs:
         if: env.PACKAGED_STATUS == 'success' && !cancelled()
         run: |
           mkdir ${{ github.workspace }}/build
-          cp ${{ github.workspace }}/openwrt/bin/targets/armvirt/64/openwrt-armvirt-64-default-rootfs.targz ${{ github.workspace }}/build
+          cp ${{ github.workspace }}/openwrt/bin/targets/armvirt/64/openwrt-armvirt-64-default-rootfs.tar.gz ${{ github.workspace }}/build
           cp ${{ env.PACKAGED_OUTPUTPATH }}/*.img.gz ${{ github.workspace }}/build
           echo "::set-output name=status::success"
 

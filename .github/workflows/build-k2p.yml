@@ -36,16 +36,16 @@ jobs:
 
       - name: Clone source code
         run: |
-          git clone --depth 1 $REPO_URL /opt/rt-n56u
+          git clone --depth 1 $REPO_URL /opt/padavan
 
       - name: Run Shell Check
         run: |
-          cd /opt/rt-n56u/trunk/tools
+          cd /opt/padavan/trunk/tools
           sh shellcheck.sh
 
       - name: Prepare toolchain
         run: |
-          cd /opt/rt-n56u/toolchain-mipsel
+          cd /opt/padavan/toolchain-mipsel
           sh dl_toolchain.sh
           mkdir -p /opt/images
 
@@ -53,12 +53,12 @@ jobs:
         run: |
           valtime=$(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M')
           val2="\\1 footer_code +='编译日期 $valtime by <a href=\"https://github.com/ylqjgm/Route\" target=\"blank\">ylqjgm</a>';"
-          sed -i "s#\(.*Non-Commercial Use Only[^;]*;\).*#$val2#" /opt/rt-n56u/trunk/user/www/n56u_ribbon_fixed/state.js
-          grep "Non-Commercial Use Only" /opt/rt-n56u/trunk/user/www/n56u_ribbon_fixed/state.js
+          sed -i "s#\(.*Non-Commercial Use Only[^;]*;\).*#$val2#" /opt/padavan/trunk/user/www/n56u_ribbon_fixed/state.js
+          grep "Non-Commercial Use Only" /opt/padavan/trunk/user/www/n56u_ribbon_fixed/state.js
 
       - name: Load custom configuration
         run: |
-          cd /opt/rt-n56u/trunk
+          cd /opt/padavan/trunk
           cp -f configs/templates/K2P_nano.config .config
           sed -i 's/CONFIG_FIRMWARE_INCLUDE_SFTP=y/CONFIG_FIRMWARE_INCLUDE_SFTP=n/g' .config
           sed -i 's/CONFIG_FIRMWARE_INCLUDE_XUPNPD=y/CONFIG_FIRMWARE_INCLUDE_XUPNPD=n/g' .config
