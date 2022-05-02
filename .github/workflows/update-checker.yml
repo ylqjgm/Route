@@ -6,7 +6,8 @@ env:
   PADAVAN_URL: https://github.com/hanwckf/padavan-4.4.git
   PADAVAN_BRANCH: main
   PASSWALL_URL: https://github.com/xiaorouji/openwrt-passwall.git
-  PASSWALL_BRANCH: main
+  PASSWALL_BRANCH: packages
+  PASSWALL_BRANCH2: luci
 
 on:
   workflow_dispatch:
@@ -80,6 +81,35 @@ jobs:
         id: getHash
         run: |
           git clone --depth 1 $PASSWALL_URL -b $PASSWALL_BRANCH .
+          echo "::set-output name=commitHash::$(git rev-parse HEAD)"
+
+      - name: Compare Commit Hash
+        id: cacheHash
+        uses: actions/cache@v2
+        with:
+          path: .commitHash
+          key: HEAD-${{ steps.getHash.outputs.commitHash }}
+
+      - name: Save New Commit Hash
+        if: steps.cacheHash.outputs.cache-hit != 'true'
+        run: |
+          echo ${{ steps.getHash.outputs.commitHash }} | tee .commitHash
+
+      - name: Trigger build
+        if: steps.cacheHash.outputs.cache-hit != 'true'
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.REPO_TOKEN }}
+          event-type: Padavan Source Code Update
+
+  passwall-luci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get Commit Hash
+        id: getHash
+        run: |
+          git clone --depth 1 $PASSWALL_URL -b $PASSWALL_BRANCH2 .
           echo "::set-output name=commitHash::$(git rev-parse HEAD)"
 
       - name: Compare Commit Hash
