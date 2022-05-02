@@ -49,12 +49,6 @@ jobs:
           cd ${{ github.workspace }}
           git clone $REPO_URL -b $REPO_BRANCH padavan
 
-      - name: Cache
-        uses: klever1988/cachewrtbuild@main
-        with:
-          ccache: 'true'
-          prefix: ${{ github.workspace }}/padavan
-
       - name: Prepare toolchain
         run: |
           cd ${{ github.workspace }}/padavan/toolchain-mipsel
