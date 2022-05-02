@@ -1,74 +1,102 @@
 name: Update Checker
 
+env:
+  LEDE_URL: https://github.com/coolsnowwolf/lede.git
+  LEDE_BRANCH: master
+  PADAVAN_URL: https://github.com/hanwckf/padavan-4.4.git
+  PADAVAN_BRANCH: main
+  PASSWALL_URL: https://github.com/xiaorouji/openwrt-passwall.git
+  PASSWALL_BRANCH: main
+
 on:
   workflow_dispatch:
   schedule:
     - cron: 0 0 */3 * *
 
 jobs:
-  check:
+  lede:
     runs-on: ubuntu-latest
 
     steps:
       - name: Get Commit Hash
         id: getHash
         run: |
-          cd ${{ github.workspace }}/
-          git clone --depth 1 https://github.com/coolsnowwolf/lede.git -b master ${{ github.workspace }}/lede
-          cd ${{ github.workspace }}/lede
-          echo "::set-output name=lede::$(git rev-parse HEAD)"
-          cd ${{ github.workspace }}/
-          git clone --depth 1 https://github.com/hanwckf/padavan-4.4.git -b main ${{ github.workspace }}/padavan
-          cd ${{ github.workspace }}/padavan
-          echo "::set-output name=padavan::$(git rev-parse HEAD)"
+          git clone --depth 1 $LEDE_URL -b $LEDE_BRANCH .
+          echo "::set-output name=commitHash::$(git rev-parse HEAD)"
 
-      - name: Compare Commit Hash with Lede
-        id: cacheLedeHash
+      - name: Compare Commit Hash
+        id: cacheHash
         uses: actions/cache@v2
         with:
-          path: .ledeCommitHash
-          key: HEAD-${{ steps.getHash.outputs.lede }}
+          path: .commitHash
+          key: HEAD-${{ steps.getHash.outputs.commitHash }}
 
-      - name: Compare Commit Hash with Padavan
-        id: cachePadavanHash
+      - name: Save New Commit Hash
+        if: steps.cacheHash.outputs.cache-hit != 'true'
+        run: |
+          echo ${{ steps.getHash.outputs.commitHash }} | tee .commitHash
+
+      - name: Trigger build
+        if: steps.cacheHash.outputs.cache-hit != 'true'
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.REPO_TOKEN }}
+          event-type: Lede Source Code Update
+
+  padavan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get Commit Hash
+        id: getHash
+        run: |
+          git clone --depth 1 $PADAVAN_URL -b $PADAVAN_BRANCH .
+          echo "::set-output name=commitHash::$(git rev-parse HEAD)"
+
+      - name: Compare Commit Hash
+        id: cacheHash
         uses: actions/cache@v2
         with:
-          path: .padavanCommitHash
-          key: HEAD-${{ steps.getHash.outputs.padavan }}
+          path: .commitHash
+          key: HEAD-${{ steps.getHash.outputs.commitHash }}
 
-      - name: Save New Commit Hash with Lede
-        if: steps.cacheLedeHash.outputs.cache-hit != 'true'
+      - name: Save New Commit Hash
+        if: steps.cacheHash.outputs.cache-hit != 'true'
         run: |
-          echo ${{ steps.getHash.outputs.lede }} | tee .ledeCommitHash
+          echo ${{ steps.getHash.outputs.commitHash }} | tee .commitHash
 
-      - name: Save New Commit Hash with Padavan
-        if: steps.cachePadavanHash.outputs.cache-hit != 'true'
+      - name: Trigger build
+        if: steps.cacheHash.outputs.cache-hit != 'true'
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.REPO_TOKEN }}
+          event-type: Padavan Source Code Update
+
+  padavan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get Commit Hash
+        id: getHash
         run: |
-          echo ${{ steps.getHash.outputs.padavan }} | tee .padavanCommitHash
+          git clone --depth 1 $PASSWALL_URL -b $PASSWALL_BRANCH .
+          echo "::set-output name=commitHash::$(git rev-parse HEAD)"
 
-      - name: Trigger build N1
-        if: steps.cacheLedeHash.outputs.cache-hit != 'true'
+      - name: Compare Commit Hash
+        id: cacheHash
+        uses: actions/cache@v2
+        with:
+          path: .commitHash
+          key: HEAD-${{ steps.getHash.outputs.commitHash }}
+
+      - name: Save New Commit Hash
+        if: steps.cacheHash.outputs.cache-hit != 'true'
+        run: |
+          echo ${{ steps.getHash.outputs.commitHash }} | tee .commitHash
+
+      - name: Trigger build
+        if: steps.cacheHash.outputs.cache-hit != 'true'
         uses: peter-evans/repository-dispatch@v2
         with:
           token: ${{ secrets.REPO_TOKEN }}
-          event-type: build-n1
-
-      - name: Trigger build x86
-        if: steps.cacheLedeHash.outputs.cache-hit != 'true'
-        uses: peter-evans/repository-dispatch@v2
-        with:
-          token: ${{ secrets.REPO_TOKEN }}
-          event-type: build-x86
-
-      - name: Trigger build K2P
-        if: steps.cachePadavanHash.outputs.cache-hit != 'true'
-        uses: peter-evans/repository-dispatch@v2
-        with:
-          token: ${{ secrets.REPO_TOKEN }}
-          event-type: build-k2p
-
-      - name: Delete workflow runs
-        uses: GitRML/delete-workflow-runs@main
-        with:
-          retain_days: 1
-          keep_minimum_runs: 1
+          event-type: Padavan Source Code Update
