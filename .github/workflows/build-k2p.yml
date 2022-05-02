@@ -8,11 +8,6 @@ on:
         description: 'SSH connection to Actions'
         required: false
         default: 'false'
-  push:
-    paths:
-      - '.github/workflows/build-k2p.yml'
-  watch:
-    types: started
 
 env:
   REPO_URL: https://github.com/hanwckf/padavan-4.4.git

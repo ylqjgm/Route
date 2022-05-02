@@ -8,13 +8,6 @@ on:
         description: 'SSH connection to Actions'
         required: false
         default: 'false'
-  push:
-    paths:
-      - 'x86/.config'
-      - 'x86/diy.sh'
-      - '.github/workflows/build-x86.yml'
-  watch:
-    types: started
 
 env:
   REPO_URL: https://github.com/coolsnowwolf/lede.git

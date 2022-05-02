@@ -8,13 +8,6 @@ on:
         description: 'SSH connection to Actions'
         required: false
         default: 'false'
-  push:
-    paths:
-      - 'n1/.config'
-      - 'n1/diy.sh'
-      - '.github/workflows/build-n1.yml'
-  watch:
-    types: started
 
 env:
   REPO_URL: https://github.com/coolsnowwolf/lede.git
