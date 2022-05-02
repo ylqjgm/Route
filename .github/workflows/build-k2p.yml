@@ -87,14 +87,14 @@ jobs:
           name: OpenWrt_firmware_K2P${{ env.FILE_DATE }}
           path: ${{ github.workspace }}/images
 
-      - name: Upload firmware to cowtransfer
-        id: cowtransfer
+      - name: Upload firmware to Airportal
+        id: airportal
         if: steps.organize.outputs.status == 'success' && !cancelled()
         run: |
           curl -fsSL git.io/file-transfer | sh
-          ./transfer cow --block 2621440 -s -p 64 --no-progress ${{ github.workspace }}/images 2>&1 | tee cowtransfer.log
-          echo "::warning file=cowtransfer.com::$(cat cowtransfer.log | grep https)"
-          echo "::set-output name=url::$(cat cowtransfer.log | grep https | cut -f3 -d" ")"
+          ./transfer arp --block 2621440 -s -p 64 --no-progress ${{ github.workspace }}/images 2>&1 | tee airportal.log
+          echo "::warning file=airportal.com::$(cat airportal.log | grep https)"
+          echo "::set-output name=url::$(cat airportal.log | grep https | cut -f3 -d" ")"
 
       - name: Upload firmware to WeTransfer
         id: wetransfer
@@ -111,7 +111,7 @@ jobs:
         run: |
           echo "::set-output name=release_tag::$(date +"%Y.%m.%d-%H%M"-K2P)"
           touch release.txt
-          echo "🔗 [Cowtransfer](${{ steps.cowtransfer.outputs.url }})" >> release.txt
+          echo "🔗 [Airportal](${{ steps.airportal.outputs.url }})" >> release.txt
           echo "🔗 [WeTransfer](${{ steps.wetransfer.outputs.url }})" >> release.txt
           echo "::set-output name=status::success"
 
