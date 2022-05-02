@@ -54,8 +54,6 @@ jobs:
           mkdir -p /opt/images
           cd /opt/padavan/toolchain-mipsel
           sh dl_toolchain.sh
-          cd /opt/padavan/trunk
-          sudo ./clear_tree
 
       - name: Run DIY
         run: |
