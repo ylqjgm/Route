@@ -1,0 +1,74 @@
+name: Update Checker
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: 0 0 */3 * *
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get Commit Hash
+        id: getHash
+        run: |
+          cd ${{ github.workspace }}/
+          git clone --depth 1 https://github.com/coolsnowwolf/lede.git -b master ${{ github.workspace }}/lede
+          cd ${{ github.workspace }}/lede
+          echo "::set-output name=lede::$(git rev-parse HEAD)"
+          cd ${{ github.workspace }}/
+          git clone --depth 1 https://github.com/hanwckf/padavan-4.4.git -b main ${{ github.workspace }}/padavan
+          cd ${{ github.workspace }}/padavan
+          echo "::set-output name=padavan::$(git rev-parse HEAD)"
+
+      - name: Compare Commit Hash with Lede
+        id: cacheLedeHash
+        uses: actions/cache@v2
+        with:
+          path: .ledeCommitHash
+          key: HEAD-${{ steps.getHash.outputs.lede }}
+
+      - name: Compare Commit Hash with Padavan
+        id: cachePadavanHash
+        uses: actions/cache@v2
+        with:
+          path: .padavanCommitHash
+          key: HEAD-${{ steps.getHash.outputs.padavan }}
+
+      - name: Save New Commit Hash with Lede
+        if: steps.cacheLedeHash.outputs.cache-hit != 'true'
+        run: |
+          echo ${{ steps.getHash.outputs.lede }} | tee .ledeCommitHash
+
+      - name: Save New Commit Hash with Padavan
+        if: steps.cachePadavanHash.outputs.cache-hit != 'true'
+        run: |
+          echo ${{ steps.getHash.outputs.padavan }} | tee .padavanCommitHash
+
+      - name: Trigger build N1
+        if: steps.cacheLedeHash.outputs.cache-hit != 'true'
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.REPO_TOKEN }}
+          event-type: build-n1
+
+      - name: Trigger build x86
+        if: steps.cacheLedeHash.outputs.cache-hit != 'true'
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.REPO_TOKEN }}
+          event-type: build-x86
+
+      - name: Trigger build K2P
+        if: steps.cachePadavanHash.outputs.cache-hit != 'true'
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.REPO_TOKEN }}
+          event-type: build-k2p
+
+      - name: Delete workflow runs
+        uses: GitRML/delete-workflow-runs@main
+        with:
+          retain_days: 1
+          keep_minimum_runs: 1
