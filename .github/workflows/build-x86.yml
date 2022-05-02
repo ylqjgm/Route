@@ -12,6 +12,7 @@ on:
     paths:
       - 'x86/.config'
       - 'x86/diy.sh'
+      - '.github/workflows/build-x86.yml'
   watch:
     types: started
 
@@ -153,10 +154,10 @@ jobs:
           keep_minimum_runs: 2
 
       - name: Remove old Releases
-        uses: dev-drprasad/deletez-older-releases@v0.1.0
+        uses: dev-drprasad/delete-older-releases@v0.2.0
         if: (!cancelled())
         with:
-          keep_latest: 2
+          keep_latest: 3
           delete_tags: true
         env:
           GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
