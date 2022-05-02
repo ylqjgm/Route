@@ -135,7 +135,7 @@ jobs:
         uses: dev-drprasad/delete-older-releases@v0.2.0
         if: (!cancelled())
         with:
-          keep_latest: 3
+          keep_latest: 9
           delete_tags: true
         env:
           GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
