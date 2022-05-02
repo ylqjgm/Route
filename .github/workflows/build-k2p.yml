@@ -47,7 +47,6 @@ jobs:
         run: |
           cd /opt/padavan/toolchain-mipsel
           sh dl_toolchain.sh
-          mkdir -p /opt/images
 
       - name: Run DIY
         run: |
@@ -83,7 +82,7 @@ jobs:
         if: steps.compile.outputs.status == 'success' && !cancelled()
         run: |
           mkdir ${{ github.workspace }}/images
-          cp -f /opt/images/*.trx ${{ github.workspace }}/images/
+          cp -f /opt/padavan/trunk/vendors/*.trx ${{ github.workspace }}/images/
           echo "::set-output name=status::success"
 
       - name: Upload firmware directory
