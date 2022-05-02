@@ -82,7 +82,7 @@ jobs:
         if: steps.compile.outputs.status == 'success' && !cancelled()
         run: |
           mkdir ${{ github.workspace }}/images
-          cp -f /opt/padavan/trunk/vendors/*.trx ${{ github.workspace }}/images/
+          cp -f /opt/padavan/trunk/images/*.trx ${{ github.workspace }}/images/
           echo "::set-output name=status::success"
 
       - name: Upload firmware directory
