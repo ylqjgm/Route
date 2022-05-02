@@ -119,7 +119,7 @@ jobs:
 
       - name: Upload firmware to WeTransfer
         id: wetransfer
-        if: steps.organize.outputs.status == 'success' && && !cancelled()
+        if: steps.organize.outputs.status == 'success' && !cancelled()
         run: |
           curl -fsSL git.io/file-transfer | sh
           ./transfer wet -s -p 16 --no-progress ${{ env.FIRMWARE }} 2>&1 | tee wetransfer.log
@@ -128,7 +128,7 @@ jobs:
 
       - name: Generate release tag
         id: tag
-        if: steps.organize.outputs.status == 'success' && && !cancelled()
+        if: steps.organize.outputs.status == 'success' && !cancelled()
         run: |
           echo "::set-output name=release_tag::$(date +"%Y.%m.%d-%H%M"-x86)"
           touch release.txt
