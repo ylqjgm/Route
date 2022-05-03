@@ -37,12 +37,19 @@ jobs:
         run: |
           echo ${{ steps.getHash.outputs.commitHash }} | tee .commitHash
 
-      - name: Trigger build
+      - name: Trigger build x86
         if: steps.cacheHash.outputs.cache-hit != 'true'
-        uses: peter-evans/repository-dispatch@v2
+        uses: GeekEast/trigger-open-pr-workflow@1.0.7
         with:
           token: ${{ secrets.REPO_TOKEN }}
-          event-type: Lede Source Code Update
+          workflow_filename: 'build-x86.yml'
+
+      - name: Trigger build N1
+        if: steps.cacheHash.outputs.cache-hit != 'true'
+        uses: GeekEast/trigger-open-pr-workflow@1.0.7
+        with:
+          token: ${{ secrets.REPO_TOKEN }}
+          workflow_filename: 'build-n1.yml'
 
   padavan:
     runs-on: ubuntu-latest
@@ -66,12 +73,12 @@ jobs:
         run: |
           echo ${{ steps.getHash.outputs.commitHash }} | tee .commitHash
 
-      - name: Trigger build
+      - name: Trigger build K2P
         if: steps.cacheHash.outputs.cache-hit != 'true'
-        uses: peter-evans/repository-dispatch@v2
+        uses: GeekEast/trigger-open-pr-workflow@1.0.7
         with:
           token: ${{ secrets.REPO_TOKEN }}
-          event-type: Padavan Source Code Update
+          workflow_filename: 'build-k2p.yml'
 
   passwall:
     runs-on: ubuntu-latest
@@ -95,12 +102,12 @@ jobs:
         run: |
           echo ${{ steps.getHash.outputs.commitHash }} | tee .commitHash
 
-      - name: Trigger build
+      - name: Trigger build x86
         if: steps.cacheHash.outputs.cache-hit != 'true'
-        uses: peter-evans/repository-dispatch@v2
+        uses: GeekEast/trigger-open-pr-workflow@1.0.7
         with:
           token: ${{ secrets.REPO_TOKEN }}
-          event-type: Padavan Source Code Update
+          workflow_filename: 'build-x86.yml'
 
   passwall-luci:
     runs-on: ubuntu-latest
@@ -124,9 +131,9 @@ jobs:
         run: |
           echo ${{ steps.getHash.outputs.commitHash }} | tee .commitHash
 
-      - name: Trigger build
+      - name: Trigger build x86
         if: steps.cacheHash.outputs.cache-hit != 'true'
-        uses: peter-evans/repository-dispatch@v2
+        uses: GeekEast/trigger-open-pr-workflow@1.0.7
         with:
           token: ${{ secrets.REPO_TOKEN }}
-          event-type: Padavan Source Code Update
+          workflow_filename: 'build-x86.yml'
