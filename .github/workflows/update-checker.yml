@@ -39,14 +39,14 @@ jobs:
 
       - name: Trigger build x86
         if: steps.cacheHash.outputs.cache-hit != 'true'
-        uses: GeekEast/trigger-open-pr-workflow@1.0.7
+        uses: GeekEast/trigger-open-pr-workflow@main
         with:
           token: ${{ secrets.REPO_TOKEN }}
           workflow_filename: 'build-x86.yml'
 
       - name: Trigger build N1
         if: steps.cacheHash.outputs.cache-hit != 'true'
-        uses: GeekEast/trigger-open-pr-workflow@1.0.7
+        uses: GeekEast/trigger-open-pr-workflow@main
         with:
           token: ${{ secrets.REPO_TOKEN }}
           workflow_filename: 'build-n1.yml'
@@ -75,7 +75,7 @@ jobs:
 
       - name: Trigger build K2P
         if: steps.cacheHash.outputs.cache-hit != 'true'
-        uses: GeekEast/trigger-open-pr-workflow@1.0.7
+        uses: GeekEast/trigger-open-pr-workflow@main
         with:
           token: ${{ secrets.REPO_TOKEN }}
           workflow_filename: 'build-k2p.yml'
@@ -104,7 +104,7 @@ jobs:
 
       - name: Trigger build x86
         if: steps.cacheHash.outputs.cache-hit != 'true'
-        uses: GeekEast/trigger-open-pr-workflow@1.0.7
+        uses: GeekEast/trigger-open-pr-workflow@main
         with:
           token: ${{ secrets.REPO_TOKEN }}
           workflow_filename: 'build-x86.yml'
@@ -133,7 +133,7 @@ jobs:
 
       - name: Trigger build x86
         if: steps.cacheHash.outputs.cache-hit != 'true'
-        uses: GeekEast/trigger-open-pr-workflow@1.0.7
+        uses: GeekEast/trigger-open-pr-workflow@main
         with:
           token: ${{ secrets.REPO_TOKEN }}
           workflow_filename: 'build-x86.yml'
