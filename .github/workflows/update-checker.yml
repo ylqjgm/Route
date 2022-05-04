@@ -44,13 +44,6 @@ jobs:
           token: ${{ secrets.REPO_TOKEN }}
           workflow_filename: 'build-x86.yml'
 
-      - name: Trigger build N1
-        if: steps.cacheHash.outputs.cache-hit != 'true'
-        uses: GeekEast/trigger-open-pr-workflow@main
-        with:
-          token: ${{ secrets.REPO_TOKEN }}
-          workflow_filename: 'build-n1.yml'
-
   padavan:
     runs-on: ubuntu-latest
 
