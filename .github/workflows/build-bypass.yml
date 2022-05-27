@@ -1,4 +1,4 @@
-name: Build K2P
+name: Build Bypass Route
 
 on:
   repository_dispatch:
@@ -10,7 +10,12 @@ on:
         default: 'false'
 
 env:
-  REPO_URL: https://github.com/hanwckf/padavan-4.4.git
+  REPO_URL: https://github.com/coolsnowwolf/lede.git
+  REPO_BRANCH: master
+  CONFIG_FILE: bypass/.config
+  DIY_SH: bypass/diy.sh
+  DIY_FILES: bypass/files
+  TZ: Asia/Shanghai
 
 jobs:
   build:
@@ -18,55 +23,64 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@master
+        uses: actions/checkout@main
 
       - name: Initialization environment
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
-          sudo apt-get update
-          sudo apt-get -y install unzip libtool-bin curl cmake gperf gawk flex bison nano xxd fakeroot \
-          cpio git python-docutils gettext automake autopoint texinfo build-essential help2man \
-          pkg-config zlib1g-dev libgmp3-dev libmpc-dev libmpfr-dev libncurses5-dev libltdl-dev wget
+          sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
+          sudo -E apt-get -qq update
+          sudo -E apt-get -qq install $(curl -fsSL git.io/depends-ubuntu-2004)
+          sudo -E apt-get -qq autoremove --purge
+          sudo -E apt-get -qq clean
+          sudo timedatectl set-timezone "$TZ"
+          sudo mkdir -p /workdir
+          sudo chown $USER:$GROUPS /workdir
 
       - name: Clone source code
         run: |
-          git clone --depth 1 $REPO_URL /opt/padavan
+          df -hT $PWD
+          cd ${{ github.workspace }}
+          git clone $REPO_URL -b $REPO_BRANCH openwrt
 
-      - name: Run Shell Check
-        run: |
-          cd /opt/padavan/trunk/tools
-          sh shellcheck.sh
+      - name: Cache
+        uses: klever1988/cachewrtbuild@main
+        with:
+          ccache: 'true'
+          prefix: ${{ github.workspace }}/openwrt
 
-      - name: Prepare toolchain
+      - name: Update and Install feeds
         run: |
-          cd /opt/padavan/toolchain-mipsel
-          sh dl_toolchain.sh
-
-      - name: Run DIY
-        run: |
-          valtime=$(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M')
-          val2="\\1 footer_code +='编译日期 $valtime by <a href=\"https://github.com/ylqjgm/Route\" target=\"blank\">ylqjgm</a>';"
-          sed -i "s#\(.*Non-Commercial Use Only[^;]*;\).*#$val2#" /opt/padavan/trunk/user/www/n56u_ribbon_fixed/state.js
-          grep "Non-Commercial Use Only" /opt/padavan/trunk/user/www/n56u_ribbon_fixed/state.js
+          cd ${{ github.workspace }}/openwrt
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
 
       - name: Load custom configuration
         run: |
-          cd /opt/padavan/trunk
-          cp -f configs/templates/K2P_nano.config .config
-          sed -i 's/CONFIG_FIRMWARE_INCLUDE_SFTP=y/CONFIG_FIRMWARE_INCLUDE_SFTP=n/g' .config
-          sed -i 's/CONFIG_FIRMWARE_INCLUDE_XUPNPD=y/CONFIG_FIRMWARE_INCLUDE_XUPNPD=n/g' .config
-          sed -i 's/CONFIG_FIRMWARE_INCLUDE_FFMPEG_NEW=y/CONFIG_FIRMWARE_INCLUDE_FFMPEG_NEW=n/g' .config
-          sed -i 's/CONFIG_FIRMWARE_INCLUDE_VLMCSD=y/CONFIG_FIRMWARE_INCLUDE_VLMCSD=n/g' .config
-          sudo ./clear_tree
+          [ -e $CONFIG_FILE ] && mv $CONFIG_FILE ${{ github.workspace }}/openwrt/.config
+          [ -e $DIY_SH ] && mv $DIY_SH ${{ github.workspace }}/openwrt/diy.sh
+          chmod +x ${{ github.workspace }}/openwrt/diy.sh
+          cd ${{ github.workspace }}/openwrt
+          ./diy.sh
+
+      - name: Download package
+        id: package
+        run: |
+          cd ${{ github.workspace }}/openwrt
+          make defconfig
+          make download -j8
+          find dl -size -1024c -exec ls -l {} \;
+          find dl -size -1024c -exec rm -f {} \;
 
       - name: Compile the firmware
         id: compile
         run: |
-          cd /opt/padavan/trunk
-          sudo ./build_firmware_modify K2P_nano 0
+          cd openwrt
+          echo -e "$(nproc) thread compile"
+          make -j$(nproc) || make -j1 || make -j1 V=s
           echo "::set-output name=status::success"
-          echo "FILE_DATE=_$(date +"%Y%m%d%H%M"-K2P)" >> $GITHUB_ENV
+          echo "FILE_DATE=_$(date +"%Y%m%d%H%M"-Bypass)" >> $GITHUB_ENV
 
       - name: Check space usage
         if: (!cancelled())
@@ -76,23 +90,24 @@ jobs:
         id: organize
         if: steps.compile.outputs.status == 'success' && !cancelled()
         run: |
-          mkdir ${{ github.workspace }}/images
-          cp -f /opt/padavan/trunk/images/*.trx ${{ github.workspace }}/images/
+          cd ${{ github.workspace }}/openwrt/bin/targets/*/*
+          rm -rf packages
+          echo "FIRMWARE=$PWD" >> $GITHUB_ENV
           echo "::set-output name=status::success"
 
       - name: Upload firmware directory
         uses: actions/upload-artifact@main
         if: steps.organize.outputs.status == 'success' && !cancelled()
         with:
-          name: OpenWrt_firmware_K2P${{ env.FILE_DATE }}
-          path: ${{ github.workspace }}/images
+          name: OpenWrt_firmware_Bypass${{ env.FILE_DATE }}
+          path: ${{ env.FIRMWARE }}
 
       - name: Upload firmware to WeTransfer
         id: wetransfer
         if: steps.organize.outputs.status == 'success' && !cancelled()
         run: |
           curl -fsSL git.io/file-transfer | sh
-          ./transfer wet -s -p 16 --no-progress ${{ github.workspace }}/images 2>&1 | tee wetransfer.log
+          ./transfer wet -s -p 16 --no-progress ${{ env.FIRMWARE }} 2>&1 | tee wetransfer.log
           echo "::warning file=wetransfer.com::$(cat wetransfer.log | grep https)"
           echo "::set-output name=url::$(cat wetransfer.log | grep https | cut -f3 -d" ")"
 
@@ -100,7 +115,7 @@ jobs:
         id: tag
         if: steps.organize.outputs.status == 'success' && !cancelled()
         run: |
-          echo "::set-output name=release_tag::$(date +"%Y.%m.%d-%H%M"-K2P)"
+          echo "::set-output name=release_tag::$(date +"%Y.%m.%d-%H%M"-Bypass)"
           touch release.txt
           echo "🔗 [Airportal](${{ steps.airportal.outputs.url }})" >> release.txt
           echo "🔗 [WeTransfer](${{ steps.wetransfer.outputs.url }})" >> release.txt
@@ -114,7 +129,7 @@ jobs:
         with:
           tag_name: ${{ steps.tag.outputs.release_tag }}
           body_path: release.txt
-          files: ${{ github.workspace }}/images/*
+          files: ${{ env.FIRMWARE }}/*
 
       - name: Delete workflow runs
         uses: Mattraks/delete-workflow-runs@main

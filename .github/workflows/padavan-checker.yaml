@@ -1,0 +1,40 @@
+name: Padavan Checker
+
+env:
+  PADAVAN_URL: https://github.com/hanwckf/padavan-4.4.git
+  PADAVAN_BRANCH: main
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: 0 0 */3 * *
+
+jobs:
+  checker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get Commit Hash
+        id: getHash
+        run: |
+          git clone --depth 1 $PADAVAN_URL -b $PADAVAN_BRANCH .
+          echo "::set-output name=commitHash::$(git rev-parse HEAD)"
+
+      - name: Compare Commit Hash
+        id: cacheHash
+        uses: actions/cache@v2
+        with:
+          path: .commitHash
+          key: HEAD-${{ steps.getHash.outputs.commitHash }}
+
+      - name: Save New Commit Hash
+        if: steps.cacheHash.outputs.cache-hit != 'true'
+        run: |
+          echo ${{ steps.getHash.outputs.commitHash }} | tee .commitHash
+
+      - name: Trigger build K2P
+        if: steps.cacheHash.outputs.cache-hit != 'true'
+        uses: GeekEast/trigger-open-pr-workflow@main
+        with:
+          token: ${{ secrets.REPO_TOKEN }}
+          workflow_filename: 'build-k2p.yml'

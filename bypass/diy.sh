@@ -5,7 +5,7 @@ svn co https://github.com/xiaoqingfengATGH/luci-theme-infinityfreedom/trunk/luci
 sed -i 's#luci-theme-bootstrap#luci-theme-infinityfreedom#g' feeds/luci/collections/luci/Makefile
 
 # 修改默认IP
-sed -i 's#192.168.1.1#192.168.1.254#g' package/base-files/files/bin/config_generate
+sed -i 's#192.168.1.1#10.9.8.254#g' package/base-files/files/bin/config_generate
 
 # 添加各种包
 git clone https://github.com/jerrykuku/luci-app-ttnode.git package/luci-app-ttnode

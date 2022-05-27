@@ -1,4 +1,4 @@
-name: Build x86
+name: Build Primary Route
 
 on:
   repository_dispatch:
@@ -12,9 +12,9 @@ on:
 env:
   REPO_URL: https://github.com/coolsnowwolf/lede.git
   REPO_BRANCH: master
-  CONFIG_FILE: x86/.config
-  DIY_SH: x86/diy.sh
-  DIY_FILES: x86/files
+  CONFIG_FILE: primary/.config
+  DIY_SH: primary/diy.sh
+  DIY_FILES: primary/files
   TZ: Asia/Shanghai
 
 jobs:
@@ -80,7 +80,7 @@ jobs:
           echo -e "$(nproc) thread compile"
           make -j$(nproc) || make -j1 || make -j1 V=s
           echo "::set-output name=status::success"
-          echo "FILE_DATE=_$(date +"%Y%m%d%H%M"-x86)" >> $GITHUB_ENV
+          echo "FILE_DATE=_$(date +"%Y%m%d%H%M"-Primary)" >> $GITHUB_ENV
 
       - name: Check space usage
         if: (!cancelled())
@@ -99,17 +99,8 @@ jobs:
         uses: actions/upload-artifact@main
         if: steps.organize.outputs.status == 'success' && !cancelled()
         with:
-          name: OpenWrt_firmware_x86${{ env.FILE_DATE }}
+          name: OpenWrt_firmware_Primary${{ env.FILE_DATE }}
           path: ${{ env.FIRMWARE }}
-
-      - name: Upload firmware to Airportal
-        id: airportal
-        if: steps.organize.outputs.status == 'success' && !cancelled()
-        run: |
-          curl -fsSL git.io/file-transfer | sh
-          ./transfer arp --block 2621440 -s -p 64 --no-progress ${{ env.FIRMWARE }} 2>&1 | tee airportal.log
-          echo "::warning file=airportal.com::$(cat airportal.log | grep https)"
-          echo "::set-output name=url::$(cat airportal.log | grep https | cut -f3 -d" ")"
 
       - name: Upload firmware to WeTransfer
         id: wetransfer
@@ -124,7 +115,7 @@ jobs:
         id: tag
         if: steps.organize.outputs.status == 'success' && !cancelled()
         run: |
-          echo "::set-output name=release_tag::$(date +"%Y.%m.%d-%H%M"-x86)"
+          echo "::set-output name=release_tag::$(date +"%Y.%m.%d-%H%M"-Primary)"
           touch release.txt
           echo "🔗 [Airportal](${{ steps.airportal.outputs.url }})" >> release.txt
           echo "🔗 [WeTransfer](${{ steps.wetransfer.outputs.url }})" >> release.txt
