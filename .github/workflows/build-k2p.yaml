@@ -102,7 +102,6 @@ jobs:
         run: |
           echo "::set-output name=release_tag::$(date +"%Y.%m.%d-%H%M"-K2P)"
           touch release.txt
-          echo "🔗 [Airportal](${{ steps.airportal.outputs.url }})" >> release.txt
           echo "🔗 [WeTransfer](${{ steps.wetransfer.outputs.url }})" >> release.txt
           echo "::set-output name=status::success"
 
