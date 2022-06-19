@@ -11,6 +11,7 @@ git clone https://github.com/jerrykuku/luci-app-ttnode.git
 svn co https://github.com/sirpdboy/netspeedtest/trunk/luci-app-netspeedtest
 git clone https://github.com/sirpdboy/luci-app-netdata.git
 git clone https://github.com/KFERMercer/luci-app-tcpdump.git
+git clone https://github.com/yaof2/luci-app-ikoolproxy.git
 popd
 
 # 设置默认主题

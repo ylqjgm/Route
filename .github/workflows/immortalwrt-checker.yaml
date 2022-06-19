@@ -2,7 +2,7 @@ name: ImmortalWrt Checker
 
 env:
   LEDE_URL: https://github.com/immortalwrt/immortalwrt.git
-  LEDE_BRANCH: openwrt-18.06
+  LEDE_BRANCH: openwrt-18.06-k5.4
 
 on:
   workflow_dispatch:
