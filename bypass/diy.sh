@@ -6,6 +6,7 @@ mkdir -p package/ylqjgm
 pushd package/ylqjgm
 svn co https://github.com/xiaoqingfengATGH/luci-theme-infinityfreedom/trunk/luci-theme-infinityfreedom
 git clone https://github.com/sirpdboy/luci-app-advanced.git
+git clone https://github.com/zzsj0928/luci-app-pushbot.git
 svn co https://github.com/sirpdboy/netspeedtest/trunk/luci-app-netspeedtest
 git clone https://github.com/sirpdboy/luci-app-netdata.git
 git clone https://github.com/KFERMercer/luci-app-tcpdump.git
@@ -61,7 +62,3 @@ sed -i 's#192.168.1.1#10.9.8.2#g' package/base-files/files/bin/config_generate
 sed -i "s/OpenWrt /ylqjgm build $(TZ=UTC-8 date "+%Y.%m.%d") @ OpenWrt /g" package/lean/default-settings/files/zzz-default-settings
 sed -i 's/${3:-LuCI}/ylqjgm/g' feeds/luci/modules/luci-base/src/mkversion.sh
 sed -i 's/${2:-Git}/$(TZ=UTC-18 date "+%Y-%m-%d")/g' feeds/luci/modules/luci-base/src/mkversion.sh
-
-# 修改插件名字
-sed -i 's/"TTYD 终端"/"终端"/g' `grep "TTYD 终端" -rl ./`
-sed -i 's/"挂载 SMB 网络共享"/"挂载共享"/g' `grep "挂载 SMB 网络共享" -rl ./`
