@@ -32,16 +32,9 @@ jobs:
         run: |
           echo ${{ steps.getHash.outputs.commitHash }} | tee .commitHash
 
-      - name: Trigger build Primary
+      - name: Trigger build OpenWRT
         if: steps.cacheHash.outputs.cache-hit != 'true'
         uses: GeekEast/trigger-open-pr-workflow@main
         with:
           token: ${{ secrets.REPO_TOKEN }}
-          workflow_filename: 'build-primary.yml'
-
-      - name: Trigger build Bypass
-        if: steps.cacheHash.outputs.cache-hit != 'true'
-        uses: GeekEast/trigger-open-pr-workflow@main
-        with:
-          token: ${{ secrets.REPO_TOKEN }}
-          workflow_filename: 'build-bypass.yml'
+          workflow_filename: 'build-openwrt.yml'
