@@ -14,10 +14,6 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-      - name: Space Check
-        run: |
-          df -hT
-
       - name: Setup Debug Session
         if: github.event.inputs.ssh == 'true' && github.event.inputs.ssh != 'false'
         uses: P3TERX/ssh2actions@main
@@ -27,4 +23,4 @@ jobs:
       
       - name: Space Check
         run: |
-          df -hT $PWD
+          du -sh /* | sort -rh
