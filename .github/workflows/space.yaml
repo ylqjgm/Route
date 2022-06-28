@@ -21,6 +21,10 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       
-      - name: Space Check
+      - name: Space by du
         run: |
           du -sh /* | sort -rh
+      
+      - name: Space by df
+        run: |
+          df -hT
