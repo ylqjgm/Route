@@ -28,7 +28,7 @@ sed -i '/jq.cookie(.ltime., 0)/{n;s/countdown = 60/\/\/&/g}' package/ylqjgm/luci
 
 # 修复百度云盘启动项
 rm -f package/ylqjgm/luci-app-baidupcs-web/root/etc/init.d/baidupcs-web
-cp baidupcs-web package/ylqjgm/luci-app-baidupcs-web/root/etc/init.d/baidupcs-web
+cp openwrt/baidupcs-web package/ylqjgm/luci-app-baidupcs-web/root/etc/init.d/baidupcs-web
 
 # 修改makefile
 find package/*/ -maxdepth 2 -path "*/Makefile" | xargs -i sed -i 's/include\ \.\.\/\.\.\/luci\.mk/include \$(TOPDIR)\/feeds\/luci\/luci\.mk/g' {}
