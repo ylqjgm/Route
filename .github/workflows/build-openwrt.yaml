@@ -44,12 +44,6 @@ jobs:
           cd ${{ github.workspace }}
           git clone $REPO_URL -b $REPO_BRANCH lede
 
-      - name: Cache
-        uses: klever1988/cachewrtbuild@main
-        with:
-          ccache: 'true'
-          prefix: ${{ github.workspace }}/lede
-
       - name: Update and Install feeds
         run: |
           cd ${{ github.workspace }}/lede
