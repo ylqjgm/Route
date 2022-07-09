@@ -9,12 +9,6 @@ on:
         required: true
         default: 'build-openwrt'
 
-env:
-  REPO_URL: https://github.com/immortalwrt/immortalwrt.git
-  REPO_BRANCH: openwrt-18.06-k5.4
-  CONFIG_NAME: openwrt
-  TZ: Asia/Shanghai
-
 jobs:
   build:
     runs-on: ubuntu-20.04
@@ -33,10 +27,11 @@ jobs:
       - name: Initialization Setting
         run: |
           source ${{ github.workspace }}/build/${{ matrix.target }}/setting.ini
-          echo "::set-env name=REPO_URL::${REPO_URL}"
-          echo "::set-env name=REPO_BRANCH::${REPO_BRANCH}"
-          echo "::set-env name=UPLOAD_COWTRANSFER::${UPLOAD_COWTRANSFER}"
-          echo "::set-env name=UPLOAD_RELEASE::${UPLOAD_RELEASE}"
+          echo "REPO_URL=${REPO_URL}" >> $GITHUB_ENV
+          echo "REPO_BRANCH=${REPO_BRANCH}" >> $GITHUB_ENV
+          echo "UPLOAD_COWTRANSFER=${UPLOAD_COWTRANSFER}" >> $GITHUB_ENV
+          echo "UPLOAD_RELEASE=${UPLOAD_RELEASE}" >> $GITHUB_ENV
+          echo "TZ=Asia/Shanghai" >> $GITHUB_ENV
 
       - name: Initialization environment
         env:
@@ -108,9 +103,9 @@ jobs:
         run: |
           curl -fsSL git.io/file-transfer | sh
           ./transfer wet -s -p 16 --no-progress ${{ env.FIRMWARE }} 2>&1 | tee wetransfer.log
-          echo "::set-env name=WETRANSFER_URL::$(cat wetransfer.log | grep https)"
+          echo "WETRANSFER_URL=$(cat wetransfer.log | grep https)" >> $GITHUB_ENV
           ./transfer cow --block 2621440 -s -p 64 --no-progress ${{ env.FIRMWARE }} 2>&1 | tee cowtransfer.log
-          echo "::set-env name=COWTRANSFER_URL::$(cat cowtransfer.log | grep https | cut -f3 -d" ")"
+          echo "COWTRANSFER_URL=$(cat cowtransfer.log | grep https | cut -f3 -d" ")" >> $GITHUB_ENV
 
       - name: Generate release tag
         id: tag
