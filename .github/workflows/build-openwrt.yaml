@@ -35,7 +35,6 @@ jobs:
           source ${{ github.workspace }}/build/${{ matrix.target }}/setting.ini
           echo "::set-env name=REPO_URL::${REPO_URL}"
           echo "::set-env name=REPO_BRANCH::${REPO_BRANCH}"
-          echo "::set-env name=SSH_ACTIONS::${SSH_ACTIONS}"
           echo "::set-env name=UPLOAD_COWTRANSFER::${UPLOAD_COWTRANSFER}"
           echo "::set-env name=UPLOAD_RELEASE::${UPLOAD_RELEASE}"
 
@@ -71,10 +70,6 @@ jobs:
             chmod +x build/${{ matrix.target }}/diy.sh
             /bin/bash build/${{ matrix.target }}/diy.sh
           fi
-      
-      - name: SSH Connection
-        uses: P3TERX/debugger-action@main
-        if: env.SSH_ACTIONS == 'true' || contains(github.event.action, 'ssh')
 
       - name: Download package
         id: package
@@ -108,14 +103,14 @@ jobs:
           echo "FIRMWARE=$PWD" >> $GITHUB_ENV
           echo "::set-output name=status::success"
 
-      - name: Upload firmware to WeTransfer
-        id: wetransfer
+      - name: Upload firmware to WeTransfer & CowTransfer
         if: steps.organize.outputs.status == 'success' && env.UPLOAD_COWTRANSFER == 'true' && !cancelled()
         run: |
           curl -fsSL git.io/file-transfer | sh
           ./transfer wet -s -p 16 --no-progress ${{ env.FIRMWARE }} 2>&1 | tee wetransfer.log
-          echo "::warning file=wetransfer.com::$(cat wetransfer.log | grep https)"
-          echo "::set-output name=url::$(cat wetransfer.log | grep https | cut -f3 -d" ")"
+          echo "::set-env name=WETRANSFER_URL::$(cat wetransfer.log | grep https)"
+          ./transfer cow --block 2621440 -s -p 64 --no-progress ${{ env.FIRMWARE }} 2>&1 | tee cowtransfer.log
+          echo "::set-env name=COWTRANSFER_URL::$(cat cowtransfer.log | grep https | cut -f3 -d" ")"
 
       - name: Generate release tag
         id: tag
@@ -123,7 +118,8 @@ jobs:
         run: |
           echo "::set-output name=release_tag::$(date +"%Y.%m.%d-%H%M"-OpenWRT)"
           touch release.txt
-          echo "🔗 [WeTransfer](${{ steps.wetransfer.outputs.url }})" >> release.txt
+          echo "💐 奶牛快传(国内高速🚀下载)： ${{ env.COWTRANSFER_URL }}" >> release.txt
+          echo "⛄ WeTransfer(国外高速🚀下载)： ${{ env.WETRANSFER_URL }}" >> release.txt
           echo "::set-output name=status::success"
 
       - name: Upload firmware to release
