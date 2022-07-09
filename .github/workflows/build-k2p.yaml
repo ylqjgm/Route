@@ -45,19 +45,14 @@ jobs:
 
       - name: Run DIY
         run: |
-          valtime=$(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M')
-          val2="\\1 footer_code +='编译日期 $valtime by <a href=\"https://github.com/ylqjgm/Route\" target=\"blank\">ylqjgm</a>';"
-          sed -i "s#\(.*Non-Commercial Use Only[^;]*;\).*#$val2#" /opt/padavan/trunk/user/www/n56u_ribbon_fixed/state.js
-          grep "Non-Commercial Use Only" /opt/padavan/trunk/user/www/n56u_ribbon_fixed/state.js
+          [ -e k2p/diy.sh ] && mv k2p/diy.sh ${{ github.workspace }}/diy.sh
+          chmod +x ${{ github.workspace }}/diy.sh
+          sh ${{ github.workspace }}/diy.sh
 
       - name: Load custom configuration
         run: |
           cd /opt/padavan/trunk
-          cp -f configs/templates/K2P_nano.config .config
-          sed -i 's/CONFIG_FIRMWARE_INCLUDE_SFTP=y/CONFIG_FIRMWARE_INCLUDE_SFTP=n/g' .config
-          sed -i 's/CONFIG_FIRMWARE_INCLUDE_XUPNPD=y/CONFIG_FIRMWARE_INCLUDE_XUPNPD=n/g' .config
-          sed -i 's/CONFIG_FIRMWARE_INCLUDE_FFMPEG_NEW=y/CONFIG_FIRMWARE_INCLUDE_FFMPEG_NEW=n/g' .config
-          sed -i 's/CONFIG_FIRMWARE_INCLUDE_VLMCSD=y/CONFIG_FIRMWARE_INCLUDE_VLMCSD=n/g' .config
+          [ -e k2p/.config ] && mv k2p/.config /opt/padavan/trunk/.config
           sudo ./clear_tree
 
       - name: Compile the firmware

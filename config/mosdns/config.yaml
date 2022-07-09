@@ -1,0 +1,266 @@
+# 日志设置
+log:
+  level: info                   # 日志级别。可选 "debug" "info" "warn" "error"。默认 "info"。
+  file: "/tmp/mosdns.log"       # 记录日志到文件。
+
+# 数据源设置
+data_providers:
+  - tag: geosite                # 数据源的 tag。由用户自由设定。不能重复。
+    file: "./geosite.dat"       # 文件位置
+    auto_reload: true           # 文件有变化时是否自动重载。
+  - tag: geoip
+    file: "./geoip.dat"
+    auto_reload: true
+
+# 插件设置
+plugins:
+  # 缓存
+  - tag: mem_cache
+    type: cache
+    args:
+      size: 4096                # 条目数量
+      lazy_cache_ttl: 86400     # lazy cache 生存时间
+      lazy_cache_reply_ttl: 30  # 返回过期应答ttl
+      cache_everything: true    # 有大量edns时启用
+
+  # 修改应答ttl
+  - tag: modify_ttl
+    type: ttl
+    args:
+      minimal_ttl: 300          # 最小TTL。如果非零，小于这个数的应答的TTL会被修改成这个值。
+      maximum_ttl: 3600         # 最大TTL。如果非零，大于这个数的应答的TTL会被修改成这个值。
+
+  # 本地域名
+  - tag: query_cn
+    type: query_matcher
+    args:
+      domain:
+        - "provider:geosite:cn,apple-cn,steam@cn"
+
+  # 非本地域名
+  - tag: query_notcn
+    type: query_matcher
+    args:
+      domain:
+        - "provider:geosite:geolocation-!cn"
+
+  # 广告域名
+  - tag: query_ad
+    type: query_matcher
+    args:
+      domain:
+        - "provider:geosite:category-ads-all"
+
+  # 本地IP
+  - tag: response_cnip
+    type: response_matcher
+    args:
+      ip:
+        - "provider:geoip:cn"
+
+  # 阿里DNS
+  - tag: alidns
+    type: forward
+    args:
+      upstream:
+        - addr: "https://dns.alidns.com/dns-query"
+          ip_addr:
+            - "223.5.5.5"
+            - "223.6.6.6"
+            - "2400:3200::1"
+            - "2400:3200:baba::1"
+          trusted: true
+        - addr: "tls://dns.alidns.com"
+          ip_addr:
+            - "223.5.5.5"
+            - "223.6.6.6"
+            - "2400:3200::1"
+            - "2400:3200:baba::1"
+          trusted: true
+
+      bootstrap:
+        - "https://1.12.12.12/dns-query"
+        - "https://223.5.5.5/dns-query"
+        - "tls://1.12.12.12"
+        - "tls://223.5.5.5"
+      timeout: 5
+
+  # DNSPOD
+  - tag: dnspod
+    type: forward
+    args:
+      upstream:
+        - addr: "https://doh.pub/dns-query"
+          ip_addr:
+            - "119.29.29.29"
+            - "2402:4e00::"
+          trusted: true
+        - addr: "tls://dot.pub"
+          ip_addr:
+            - "119.29.29.29"
+            - "2402:4e00::"
+          trusted: true
+      bootstrap:
+        - "https://1.12.12.12/dns-query"
+        - "https://223.5.5.5/dns-query"
+        - "tls://1.12.12.12"
+        - "tls://223.5.5.5"
+      timeout: 5
+
+  # 本地备用DNS
+  - tag: local_dns
+    type: forward
+    args:
+      upstream:
+        - addr: "211.139.29.150"
+
+  # Google DNS
+  - tag: google
+    type: forward
+    args:
+      upstream:
+        - addr: "https://dns.google/dns-query"
+          ip_addr:
+            - "8.8.8.8"
+            - "2001:4860:4860::8888"
+            - "8.8.4.4"
+            - "2001:4860:4860::8844"
+          trusted: true
+        - addr: "tls/dns.google"
+          ip_addr:
+            - "8.8.8.8"
+            - "2001:4860:4860::8888"
+            - "8.8.4.4"
+            - "2001:4860:4860::8844"
+          trusted: true
+
+      bootstrap:
+        - "tls://1.0.0.1"
+        - "https://223.5.5.5/dns-query"
+      timeout: 5
+
+  # Cloudflare
+  - tag: cloudflare
+    type: forward
+    args:
+      upstream:
+        - addr: "https://cloudflare-dns.com/dns-query"
+          ip_addr:
+            - "1.1.1.1"
+            - "2606:4700:4700::1111"
+            - "1.0.0.1"
+            - "2606:4700:4700::1001"
+          trusted: true
+        - addr: "tls://cloudflare-dns.com"
+          ip_addr:
+            - "1.1.1.1"
+            - "2606:4700:4700::1111"
+            - "1.0.0.1"
+            - "2606:4700:4700::1001"
+          trusted: true
+
+      bootstrap:
+        - "tls://1.1.1.1"
+        - "https://223.5.5.5/dns-query"
+      timeout: 5
+
+  # 远程备用DNS
+  - tag: remote_dns
+    type: forward
+    args:
+      upstream:
+        - addr: "https://dns.twnic.tw/dns-query"
+          ip_addr:
+            - "101.101.101.101"
+            - "2001:de4::101"
+            - "101.102.103.104"
+            - "2001:de4::102"
+          trusted: true
+        - addr: "tls://101.101.101.101"
+          ip_addr:
+            - "101.101.101.101"
+            - "2001:de4::101"
+            - "101.102.103.104"
+            - "2001:de4::102"
+          trusted: true
+
+  # local序列
+  - tag: local
+    type: sequence
+    args:
+      exec:
+        - primary:
+            - parallel:
+              - - "alidns"
+              - - "dnspod"
+          secondary:
+            - local_dns
+          fast_fallback: 600
+          always_standby: true
+
+  # 远程序列
+  - tag: remote
+    type: sequence
+    args:
+      exec:
+        - primary:
+            - parallel:
+              - - "google"
+              - - "cloudflare"
+          secondary:
+            - remote_dns
+          fast_fallback: 600
+          always_standby: true
+
+  # 主序列
+  - tag: main_sequence
+    type: sequence
+    args:
+      exec:
+        - _no_ecs # 删除ECS
+        - mem_cache # 缓存
+        
+        - if: query_ad # 广告域名
+          exec:
+            - _new_nxdomain_response
+            - _return
+        
+        - if: query_cn # 本地域名
+          exec:
+            - local # 使用本地序列
+            - if: response_cnip # 结果是cnip
+              exec:
+                - _return
+
+        - if: query_notcn # 已知非cn域名
+          exec:
+            - _prefer_ipv4 # IPv4优先
+            - remote # 远程序列
+            - if: "! response_cnip" # 非cnip
+              exec:
+                - _return
+
+        - primary: # 其他情况
+            - _prefer_ipv4
+            - local # 优先使用本地序列
+            - if: "(! response_cnip) && [_response_valid_answer]"
+              exec:
+                - _drop_response # 丢掉
+          secondary:
+            - _prefer_ipv4
+            - remote
+          fast_fallback: 600
+          always_standby: true
+
+# 服务器设置
+servers:
+  - exec: main_sequence
+    listeners:     # 监听设置
+      - protocol: udp
+        addr: "[::1]:5335"
+      - protocol: tcp
+        addr: "[::1]:5335"
+      - protocol: udp
+        addr: "127.0.0.1:5335"
+      - protocol: tcp
+        addr: "127.0.0.1:5335"

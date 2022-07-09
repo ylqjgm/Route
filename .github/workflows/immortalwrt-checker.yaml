@@ -1,8 +1,8 @@
-name: Lede Checker
+name: ImmortalWrt Checker
 
 env:
-  LEDE_URL: https://github.com/coolsnowwolf/lede.git
-  LEDE_BRANCH: master
+  REPO_URL: https://github.com/immortalwrt/immortalwrt.git
+  REPO_BRANCH: openwrt-18.06-k5.4
 
 on:
   workflow_dispatch:
@@ -17,9 +17,8 @@ jobs:
       - name: Get Commit Hash
         id: getHash
         run: |
-          git clone --depth 1 $LEDE_URL -b $LEDE_BRANCH .
+          git clone --depth 1 $REPO_URL -b $REPO_BRANCH .
           echo "::set-output name=commitHash::$(git rev-parse HEAD)"
-
       - name: Compare Commit Hash
         id: cacheHash
         uses: actions/cache@v2
@@ -31,7 +30,6 @@ jobs:
         if: steps.cacheHash.outputs.cache-hit != 'true'
         run: |
           echo ${{ steps.getHash.outputs.commitHash }} | tee .commitHash
-
       - name: Trigger build OpenWRT
         if: steps.cacheHash.outputs.cache-hit != 'true'
         uses: GeekEast/trigger-open-pr-workflow@main

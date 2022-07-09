@@ -4,26 +4,40 @@ on:
   repository_dispatch:
   workflow_dispatch:
     inputs:
-      ssh:
-        description: 'SSH connection to Actions'
-        required: false
-        default: 'false'
+      name:
+        description: 'Person to greet'
+        required: true
+        default: 'build-openwrt'
 
 env:
-  REPO_URL: https://github.com/coolsnowwolf/lede.git
-  REPO_BRANCH: master
-  CONFIG_FILE: openwrt/.config
-  DIY_SH: openwrt/diy.sh
-  DIY_FILES: openwrt/files
+  REPO_URL: https://github.com/immortalwrt/immortalwrt.git
+  REPO_BRANCH: openwrt-18.06-k5.4
+  CONFIG_NAME: openwrt
   TZ: Asia/Shanghai
 
 jobs:
   build:
     runs-on: ubuntu-20.04
+    if: github.event.repository.owner.id == github.event.sender.id
+    
+    name: Build ${{ matrix.target }}
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [ImmortalWrt-x86_64]
 
     steps:
       - name: Checkout
         uses: actions/checkout@main
+      
+      - name: Initialization Setting
+        run: |
+          source ${{ github.workspace }}/build/${{ matrix.target }}/setting.ini
+          echo "::set-env name=REPO_URL::${REPO_URL}"
+          echo "::set-env name=REPO_BRANCH::${REPO_BRANCH}"
+          echo "::set-env name=SSH_ACTIONS::${SSH_ACTIONS}"
+          echo "::set-env name=UPLOAD_COWTRANSFER::${UPLOAD_COWTRANSFER}"
+          echo "::set-env name=UPLOAD_RELEASE::${UPLOAD_RELEASE}"
 
       - name: Initialization environment
         env:
@@ -42,26 +56,30 @@ jobs:
         run: |
           df -hT $PWD
           cd ${{ github.workspace }}
-          git clone $REPO_URL -b $REPO_BRANCH lede
+          git clone ${{ env.REPO_URL }} -b ${{ env.REPO_BRANCH }} openwrt
 
       - name: Update and Install feeds
         run: |
-          cd ${{ github.workspace }}/lede
+          cd ${{ github.workspace }}/openwrt
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
       - name: Load custom configuration
         run: |
-          [ -e $CONFIG_FILE ] && mv $CONFIG_FILE ${{ github.workspace }}/lede/.config
-          [ -e $DIY_SH ] && mv $DIY_SH ${{ github.workspace }}/lede/diy.sh
-          chmod +x ${{ github.workspace }}/lede/diy.sh
-          cd ${{ github.workspace }}/lede
-          ./diy.sh
+          [ -e build/${{ matrix.target }}/.config ] && mv build/${{ matrix.target }}/.config ${{ github.workspace }}/openwrt/.config
+          if [ -f build/${{ matrix.target }}/diy.sh ]; then
+            chmod +x build/${{ matrix.target }}/diy.sh
+            /bin/bash build/${{ matrix.target }}/diy.sh
+          fi
+      
+      - name: SSH Connection
+        uses: P3TERX/debugger-action@main
+        if: env.SSH_ACTIONS == 'true' || contains(github.event.action, 'ssh')
 
       - name: Download package
         id: package
         run: |
-          cd ${{ github.workspace }}/lede
+          cd ${{ github.workspace }}/openwrt
           make defconfig
           make download -j8
           find dl -size -1024c -exec ls -l {} \;
@@ -71,11 +89,11 @@ jobs:
       - name: Compile the firmware
         id: compile
         run: |
-          cd lede
+          cd openwrt
           echo -e "$(nproc) thread compile"
           make -j$(nproc) || make -j1 || make -j1 V=s
           echo "::set-output name=status::success"
-          echo "FILE_DATE=_$(date +"%Y%m%d%H%M"-OpenWRT)" >> $GITHUB_ENV
+          echo "FILE_DATE=_$(date +"%Y%m%d%H%M"-${{ matrix.target }})" >> $GITHUB_ENV
 
       - name: Check space usage
         if: (!cancelled())
@@ -85,14 +103,14 @@ jobs:
         id: organize
         if: steps.compile.outputs.status == 'success' && !cancelled()
         run: |
-          cd ${{ github.workspace }}/lede/bin/targets/*/*
+          cd ${{ github.workspace }}/openwrt/bin/targets/*/*
           rm -rf packages
           echo "FIRMWARE=$PWD" >> $GITHUB_ENV
           echo "::set-output name=status::success"
 
       - name: Upload firmware to WeTransfer
         id: wetransfer
-        if: steps.organize.outputs.status == 'success' && !cancelled()
+        if: steps.organize.outputs.status == 'success' && env.UPLOAD_COWTRANSFER == 'true' && !cancelled()
         run: |
           curl -fsSL git.io/file-transfer | sh
           ./transfer wet -s -p 16 --no-progress ${{ env.FIRMWARE }} 2>&1 | tee wetransfer.log
@@ -110,7 +128,7 @@ jobs:
 
       - name: Upload firmware to release
         uses: softprops/action-gh-release@v1
-        if: steps.tag.outputs.status == 'success' && !cancelled()
+        if: steps.tag.outputs.status == 'success' && env.UPLOAD_RELEASE && !cancelled()
         env:
           GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
         with:
