@@ -62,8 +62,10 @@ jobs:
         run: |
           [ -e build/${{ matrix.target }}/.config ] && mv build/${{ matrix.target }}/.config ${{ github.workspace }}/openwrt/.config
           if [ -f build/${{ matrix.target }}/diy.sh ]; then
-            chmod +x build/${{ matrix.target }}/diy.sh
-            /bin/bash build/${{ matrix.target }}/diy.sh
+            mv build/${{ matrix.target }}/diy.sh ${{ github.workspace }}/openwrt/diy.sh
+            chmod +x ${{ github.workspace }}/openwrt/diy.sh
+            cd ${{ github.workspace }}/openwrt
+            /bin/bash ./diy.sh
           fi
 
       - name: Download package
