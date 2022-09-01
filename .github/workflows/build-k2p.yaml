@@ -51,8 +51,8 @@ jobs:
 
       - name: Load custom configuration
         run: |
-          cd /opt/padavan/trunk
           [ -e k2p/.config ] && mv k2p/.config /opt/padavan/trunk/.config
+          cd /opt/padavan/trunk
           sudo ./clear_tree
 
       - name: Compile the firmware
